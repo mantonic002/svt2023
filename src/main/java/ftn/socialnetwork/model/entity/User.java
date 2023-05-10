@@ -1,4 +1,4 @@
-package ftn.socialnetwork.model;
+package ftn.socialnetwork.model.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -6,7 +6,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -43,6 +42,10 @@ public class User {
 
     @ManyToOne
     private User user;
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private Roles role;
 
     @OneToMany(mappedBy = "user")
     private Set<GroupAdmin> groupAdmin;

@@ -1,27 +1,28 @@
-package ftn.socialnetwork.model;
+package ftn.socialnetwork.model.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
-@Table(name = "images")
-public class Image {
+@Table(name = "posts")
+public class Post {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String path;
+    @Column
+    private String content;
 
-    @ManyToOne
-    private Post post;
+    @Column
+    private LocalDateTime creationDate;
 
-    @ManyToOne
-    private User user;
 }
