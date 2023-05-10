@@ -22,7 +22,7 @@ public class Post {
     @Column
     private String content;
 
-    @Column(columnDefinition = "TIMESTAMP")
+    @Column
     private LocalDateTime creationDate;
 
     @ElementCollection

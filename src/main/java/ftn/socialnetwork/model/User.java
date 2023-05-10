@@ -29,7 +29,7 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(columnDefinition = "TIMESTAMP")
+    @Column
     private LocalDateTime lastLogin;
 
     @Column(nullable = false)
@@ -43,6 +43,10 @@ public class User {
 
     @OneToMany(mappedBy = "user")
     private Set<User> friends;
+
+    @ManyToOne
+    private User user;
+
 
     @OneToMany(mappedBy = "user")
     private Set<GroupAdmin> groupAdmin;
