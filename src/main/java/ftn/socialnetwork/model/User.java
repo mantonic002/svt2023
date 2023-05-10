@@ -44,6 +44,10 @@ public class User {
     @OneToMany(mappedBy = "user")
     private Set<User> friends;
 
+    @ManyToOne
+    private User user;
+
+
     @OneToMany(mappedBy = "user")
     private Set<GroupAdmin> groupAdmin;
 }
