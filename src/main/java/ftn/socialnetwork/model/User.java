@@ -38,15 +38,11 @@ public class User {
     @Column(nullable = false)
     private String lastName;
 
-    @Column(nullable = false)
-    private String profileImagePath;
-
     @OneToMany(mappedBy = "user")
     private Set<User> friends;
 
     @ManyToOne
     private User user;
-
 
     @OneToMany(mappedBy = "user")
     private Set<GroupAdmin> groupAdmin;
