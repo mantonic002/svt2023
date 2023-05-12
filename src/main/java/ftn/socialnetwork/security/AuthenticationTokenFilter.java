@@ -1,5 +1,6 @@
 package ftn.socialnetwork.security;
 
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -8,19 +9,18 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 public class AuthenticationTokenFilter extends OncePerRequestFilter {
 
-    private UserDetailsService userDetailsService;
+    private  UserDetailsService userDetailsService;
 
     private TokenUtils tokenUtils;
 
-    @Autowired
     public AuthenticationTokenFilter(UserDetailsService userDetailsService, TokenUtils tokenUtils) {
         this.userDetailsService = userDetailsService;
         this.tokenUtils = tokenUtils;
@@ -30,8 +30,8 @@ public class AuthenticationTokenFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         HttpServletRequest httpServletRequest = (HttpServletRequest) request;
         String token = httpServletRequest.getHeader("Authorization");
-        if (token != null) {
-            if (token.startsWith("Bearer ")) {
+        if(token != null){
+            if(token.startsWith("Bearer ")){
                 token = token.substring(7);
             }
         }
