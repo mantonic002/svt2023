@@ -1,6 +1,6 @@
 package ftn.socialnetwork.model.entity;
 
-import jakarta.persistence.*;
+import javax.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -37,11 +37,11 @@ public class User {
     @Column(nullable = false)
     private String lastName;
 
-    @OneToMany(mappedBy = "user")
+    @ManyToMany
     private Set<User> friends;
 
-    @ManyToOne
-    private User user;
+    @ManyToMany(mappedBy="friends")
+    private Set<User> friendOf;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
@@ -49,4 +49,7 @@ public class User {
 
     @OneToMany(mappedBy = "user")
     private Set<GroupAdmin> groupAdmin;
+
+    @Column
+    private boolean isDeleted;
 }

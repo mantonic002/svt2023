@@ -17,7 +17,7 @@ public class TokenUtils {
     @Value("biloKojiString")
     private String secret;
 
-    @Value("3600") //3600 sec = 1h
+    @Value("3600000")
     private Long expiration;
 
     public String getUsernameFromToken(String token) {
@@ -75,8 +75,11 @@ public class TokenUtils {
         claims.put("role", userDetails.getAuthorities().toArray()[0]);
         claims.put("created", new Date(System.currentTimeMillis()));
         return Jwts.builder().setClaims(claims)
-                .setExpiration(new Date(System.currentTimeMillis() + expiration * 1000))
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(SignatureAlgorithm.HS512, secret).compact();
     }
 
+    public int getExpiredIn() {
+        return expiration.intValue();
+    }
 }

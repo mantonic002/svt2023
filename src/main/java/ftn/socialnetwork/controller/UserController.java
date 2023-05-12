@@ -2,7 +2,6 @@ package ftn.socialnetwork.controller;
 
 import ftn.socialnetwork.model.dto.UserDTO;
 import ftn.socialnetwork.model.entity.User;
-import ftn.socialnetwork.security.TokenUtils;
 import ftn.socialnetwork.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -32,22 +31,14 @@ public class UserController {
     @Autowired
     UserDetailsService userDetailsService;
 
-    @Autowired
-    AuthenticationManager authenticationManager;
+//    @Autowired
+//    AuthenticationManager authenticationManager;
 
-    @Autowired
-    TokenUtils tokenUtils;
+//    @Autowired
+//    TokenUtils tokenUtils;
 
-    /*
-    @Autowired
-    public UserController(UserServiceImpl userService, AuthenticationManager authenticationManager,
-                          UserDetailsService userDetailsService, TokenUtils tokenUtils){
-        this.userService = userService;
-        this.authenticationManager = authenticationManager;
-        this.userDetailsService = userDetailsService;
-        this.tokenUtils = tokenUtils;
-    }
-    */
+
+
     @PostMapping
     public ResponseEntity<UserDTO> create(@RequestBody @Validated UserDTO newUser){
 
@@ -61,17 +52,17 @@ public class UserController {
         return new ResponseEntity<>(userDTO, HttpStatus.CREATED);
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody UserDTO userDto) {
-        UsernamePasswordAuthenticationToken authenticationToken =
-                new UsernamePasswordAuthenticationToken(userDto.getUsername(), userDto.getPassword());
-        Authentication authentication = authenticationManager.authenticate(authenticationToken);
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        try {
-            UserDetails userDetails = userDetailsService.loadUserByUsername(userDto.getUsername());
-            return ResponseEntity.ok(tokenUtils.generateToken(userDetails));
-        } catch (UsernameNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
+//    @PostMapping("/login")
+//    public ResponseEntity<String> login(@RequestBody UserDTO userDto) {
+//        UsernamePasswordAuthenticationToken authenticationToken =
+//                new UsernamePasswordAuthenticationToken(userDto.getUsername(), userDto.getPassword());
+//        Authentication authentication = authenticationManager.authenticate(authenticationToken);
+//        SecurityContextHolder.getContext().setAuthentication(authentication);
+//        try {
+//            UserDetails userDetails = userDetailsService.loadUserByUsername(userDto.getUsername());
+//            return ResponseEntity.ok(tokenUtils.generateToken(userDetails));
+//        } catch (UsernameNotFoundException e) {
+//            return ResponseEntity.notFound().build();
+//        }
+//    }
 }
