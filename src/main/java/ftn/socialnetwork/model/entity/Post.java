@@ -1,4 +1,4 @@
-package ftn.socialnetwork.model;
+package ftn.socialnetwork.model.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -25,8 +25,4 @@ public class Post {
     @Column
     private LocalDateTime creationDate;
 
-    @ElementCollection
-    @CollectionTable(name = "images", joinColumns = @JoinColumn(name = "id"))
-    @Column(name = "images")
-    private List<String> imagePaths;
 }

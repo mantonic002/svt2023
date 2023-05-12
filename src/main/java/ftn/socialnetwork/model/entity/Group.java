@@ -1,4 +1,4 @@
-package ftn.socialnetwork.model;
+package ftn.socialnetwork.model.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
