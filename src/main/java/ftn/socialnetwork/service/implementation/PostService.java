@@ -1,6 +1,8 @@
 package ftn.socialnetwork.service.implementation;
 
+import ftn.socialnetwork.model.entity.Group;
 import ftn.socialnetwork.model.entity.Post;
+import ftn.socialnetwork.repository.GroupRepository;
 import ftn.socialnetwork.repository.PostRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,11 +19,17 @@ public class PostService {
 
     public final PostRepository postRepository;
 
+    public final GroupRepository groupRepository;
+
     @Transactional
-    public void save(Post post) {
-        postRepository.save(post);
+    public Post save(Post post) {
+        return postRepository.save(post);
     }
 
+    @Transactional
+    public void deletePost(Long id) {
+        groupRepository.deleteById(id);
+    }
 
     public Post getPost(Long id) {
         return postRepository.findById(id).get();
@@ -31,8 +39,9 @@ public class PostService {
         return postRepository.findAll();
     }
 
+    public List<Post> getPostsByGroup(Long id) {
+        Group group = groupRepository.findById(id).get();
+        return group.getPosts();
+    }
 
-//    public List<Post> getPostsByGroup(Long id) {
-//        //TODO
-//    }
 }
