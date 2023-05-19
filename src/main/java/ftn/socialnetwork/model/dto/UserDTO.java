@@ -1,13 +1,11 @@
 package ftn.socialnetwork.model.dto;
 
 import ftn.socialnetwork.model.entity.User;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 
-@Getter
-@Setter
+@Data
+@AllArgsConstructor
 @NoArgsConstructor
 public class UserDTO {
 
@@ -17,8 +15,18 @@ public class UserDTO {
 
     private String password;
 
+    private String firstName;
+
+    private String lastName;
+
+    private String email;
+
+
     public UserDTO(User createdUser) {
         this.id = createdUser.getId();
         this.username = createdUser.getUsername();
+        this.email = createdUser.getEmail();
+        this.firstName = createdUser.getFirstName();
+        this.lastName = createdUser.getLastName();
     }
 }

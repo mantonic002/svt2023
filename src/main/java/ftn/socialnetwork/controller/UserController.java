@@ -39,19 +39,6 @@ public class UserController {
 
 
 
-    @PostMapping
-    public ResponseEntity<UserDTO> create(@RequestBody @Validated UserDTO newUser){
-
-        User createdUser = userService.createUser(newUser);
-
-        if(createdUser == null){
-            return new ResponseEntity<>(null, HttpStatus.NOT_ACCEPTABLE);
-        }
-        UserDTO userDTO = new UserDTO(createdUser);
-
-        return new ResponseEntity<>(userDTO, HttpStatus.CREATED);
-    }
-
 //    @PostMapping("/login")
 //    public ResponseEntity<String> login(@RequestBody UserDTO userDto) {
 //        UsernamePasswordAuthenticationToken authenticationToken =
