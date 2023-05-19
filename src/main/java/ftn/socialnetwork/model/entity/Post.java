@@ -5,13 +5,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 @Entity
 @Getter
 @Setter
-@NoArgsConstructor
 @Table(name = "posts")
 public class Post {
 
@@ -25,4 +26,10 @@ public class Post {
     @Column
     private LocalDateTime creationDate;
 
+    @ManyToOne
+    private User user;
+
+    public Post() {
+        this.creationDate = LocalDateTime.now();
+    }
 }
