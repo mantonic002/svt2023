@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import javax.transaction.Transactional;
 import java.util.List;
 
 
@@ -31,6 +32,7 @@ public class PostController {
         return new ResponseEntity<>(updatedPost, HttpStatus.OK);
     }
 
+
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<?> deletePost (@PathVariable("id") Long id) {
         postService.deletePost(id);
@@ -43,7 +45,6 @@ public class PostController {
         return new ResponseEntity<>(post, HttpStatus.OK);
     }
 
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @GetMapping("/all")
     public ResponseEntity<List<Post>> getAllPosts(){
         List<Post> posts = postService.getAllPosts();

@@ -29,7 +29,7 @@ public class Group {
     @Column(nullable = false)
     private LocalDate creationDate;
 
-    @OneToMany
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Post> posts;
 
     @Column(nullable = false)

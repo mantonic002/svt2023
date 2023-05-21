@@ -28,7 +28,7 @@ public class PostService {
 
     @Transactional
     public void deletePost(Long id) {
-        groupRepository.deleteById(id);
+        postRepository.deleteById(id);
     }
 
     public Post getPost(Long id) {
