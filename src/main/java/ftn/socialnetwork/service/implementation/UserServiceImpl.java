@@ -35,6 +35,15 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public User findById(Long id) {
+        Optional<User> user = userRepository.findById(id);
+        if (!user.isEmpty()) {
+            return user.get();
+        }
+        return null;
+    }
+
+    @Override
     public User createUser(UserDTO userDTO) {
 
         Optional<User> user = userRepository.findFirstByUsername(userDTO.getUsername());
