@@ -21,6 +21,10 @@ public class UserDTO {
 
     private String email;
 
+    private String displayName;
+
+    private String description;
+
 
     public UserDTO(User createdUser) {
         this.id = createdUser.getId();
@@ -28,5 +32,11 @@ public class UserDTO {
         this.email = createdUser.getEmail();
         this.firstName = createdUser.getFirstName();
         this.lastName = createdUser.getLastName();
+
+        if (createdUser.getDisplayName() == null) {
+            this.displayName = createdUser.getUsername();
+        } else {
+            this.displayName = createdUser.getDisplayName();
+        }
     }
 }

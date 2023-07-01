@@ -1,5 +1,6 @@
 package ftn.socialnetwork.controller;
 
+import ftn.socialnetwork.model.dto.ChangePasswordRequest;
 import ftn.socialnetwork.model.dto.LoginRequest;
 import ftn.socialnetwork.model.dto.UserDTO;
 import ftn.socialnetwork.model.dto.UserTokenState;
@@ -75,6 +76,40 @@ public class AuthController {
         // Vrati token kao odgovor na uspesnu autentifikaciju
         return ResponseEntity.ok(new UserTokenState(jwt, expiresIn));
     }
+
+    @PostMapping("/change-password")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public ResponseEntity<?> changePassword(
+            @RequestBody ChangePasswordRequest changePasswordRequest,
+            Principal principal) {
+
+        String username = principal.getName();
+        System.out.println(username);
+        System.out.println(changePasswordRequest.getOldPassword()+1);
+        System.out.println(changePasswordRequest.getNewPassword());
+        // Authenticate the user's credentials
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(username, changePasswordRequest.getOldPassword()));
+
+        // Check if authentication was successful
+        if (authentication.isAuthenticated()) {
+            // Password verification succeeded, update the password
+            User user = userService.findByUsername(username);
+            userService.updatePassword(user, changePasswordRequest.getNewPassword());
+            return ResponseEntity.ok("Password changed successfully");
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid current password");
+        }
+    }
+
+    @PutMapping("/update")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public ResponseEntity<UserDTO> updateUser(@RequestBody @Validated UserDTO updatedUser) {
+        User updated = userService.updateUser(updatedUser);
+        UserDTO updatedUserDTO = new UserDTO(updated);
+        return ResponseEntity.ok(updatedUserDTO);
+    }
+
 
     @GetMapping("/whoami")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")

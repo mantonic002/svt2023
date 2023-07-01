@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -18,8 +17,9 @@ public class GroupService {
     public final GroupRepository repository;
 
     @Transactional
-    public void save(Group group){
+    public Group save(Group group){
         repository.save(group);
+        return group;
     }
 
     @Transactional
@@ -30,5 +30,9 @@ public class GroupService {
     @Transactional
     public Group getGroup(Long id) {
         return repository.findById(id).get();
+    }
+
+    public void deleteGroup(Long id) {
+        repository.deleteById(id);
     }
 }

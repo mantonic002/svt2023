@@ -1,11 +1,17 @@
 package ftn.socialnetwork.model.entity;
 
 import javax.persistence.*;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.BatchSize;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -47,9 +53,23 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Roles role;
 
-    @OneToMany(mappedBy = "user")
-    private Set<GroupAdmin> groupAdmin;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<GroupAdmin> admins = new ArrayList<>();
+
+    @Column
+    private String displayName;
+
+    @Column
+    private String description;
 
     @Column
     private boolean isDeleted;
+
+    @PrePersist
+    public void prePersist() {
+        if (displayName == null || displayName == "") {
+            displayName = username;
+        }
+    }
 }

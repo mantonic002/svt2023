@@ -10,5 +10,12 @@ public interface UserService {
 
     User findById(Long id);
 
+    public boolean verifyPassword(User user, String password);
+
+    public User updateUser(UserDTO updatedUser);
+
+
+    public void updatePassword(User user, String newPassword);
+
     User createUser(UserDTO userDTO);
 }

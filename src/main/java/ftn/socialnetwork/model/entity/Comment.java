@@ -32,8 +32,9 @@ public class Comment {
     @JsonIgnore
     private Post post;
 
-    @Column
-    private Long userId;
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 
     @Column
     private boolean isDeleted;

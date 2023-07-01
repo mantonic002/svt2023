@@ -63,7 +63,7 @@ public class PostController {
     }
 
     @GetMapping("/by-group/{id}")
-    public ResponseEntity<List<Post>> getPostsByGroup(Long id) {
+    public ResponseEntity<List<Post>> getPostsByGroup(@PathVariable("id") Long id) {
         List<Post> posts = postService.getPostsByGroup(id);
         return new ResponseEntity<>(posts, HttpStatus.OK);
     }
@@ -112,5 +112,33 @@ public class PostController {
         Comment addedComment = commentService.save(comment);
         return new ResponseEntity<>(addedComment, HttpStatus.CREATED);
     }
+
+    @PostMapping("/add_comment_reaction/{commentId}")
+    public ResponseEntity<Reaction> addReactionToComment(@PathVariable("commentId") Long commentId, @RequestBody Reaction reaction) {
+        Comment comment = commentService.get(commentId);
+
+        Long reactedId = null;
+
+        for (Reaction r :  comment.getReactions()) {
+            if (r.getUserId().equals(reaction.getUserId()) &&
+                    r.getReactionType().equals(reaction.getReactionType())){
+                reactedId = r.getId();
+            }
+        }
+
+        if (reactedId != null) {
+            System.out.println(reactedId);
+
+            reactionService.deleteReaction(reactedId);
+            return new ResponseEntity<>(HttpStatus.OK);
+        }
+        else {
+            reaction.setComment(comment);
+            Reaction addedReaction = reactionService.save(reaction);
+            return new ResponseEntity<>(addedReaction, HttpStatus.CREATED);
+        }
+
+    }
+
 
 }

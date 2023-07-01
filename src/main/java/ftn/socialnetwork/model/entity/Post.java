@@ -34,6 +34,10 @@ public class Post {
     @JoinColumn(name = "user_id")
     private User user;
 
+    @ManyToOne
+    @JoinColumn(name = "group+id")
+    @JsonIgnore
+    private Group group;
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @BatchSize(size = 10) // Adjust the batch size as per your requirements

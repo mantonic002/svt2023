@@ -63,4 +63,32 @@ public class UserServiceImpl implements UserService {
 
         return newUser;
     }
+
+    public User updateUser(UserDTO updatedUser) {
+        User user = userRepository.findById(updatedUser.getId())
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        // Update the user fields with the values from the updatedUser DTO
+        user.setUsername(updatedUser.getUsername());
+        user.setEmail(updatedUser.getEmail());
+        user.setFirstName(updatedUser.getFirstName());
+        user.setLastName(updatedUser.getLastName());
+        user.setDisplayName(updatedUser.getDisplayName());
+        user.setDescription(updatedUser.getDescription());
+
+        // Save the updated user in the database
+        return userRepository.save(user);
+    }
+
+
+    @Override
+    public boolean verifyPassword(User user, String password) {
+        return passwordEncoder.matches(password, user.getPassword());
+    }
+
+    @Override
+    public void updatePassword(User user, String newPassword) {
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
 }
