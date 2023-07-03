@@ -41,6 +41,9 @@ public class Group {
     @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<GroupAdmin> admins = new ArrayList<>();
 
+    @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<GroupRequest> groupRequests = new ArrayList<>();
+
     @Column(nullable = false)
     private boolean isSuspended;
 

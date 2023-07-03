@@ -1,9 +1,6 @@
 package ftn.socialnetwork.controller;
 
-import ftn.socialnetwork.model.entity.Group;
-import ftn.socialnetwork.model.entity.GroupAdmin;
-import ftn.socialnetwork.model.entity.Post;
-import ftn.socialnetwork.model.entity.User;
+import ftn.socialnetwork.model.entity.*;
 import ftn.socialnetwork.service.UserService;
 import ftn.socialnetwork.service.implementation.GroupService;
 import ftn.socialnetwork.service.implementation.PostService;
@@ -58,9 +55,9 @@ public class GroupController {
     }
 
 
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> deleteGroup (@PathVariable("id") Long id) {
-        groupService.deleteGroup(id);
+    @PutMapping ("/delete/{id}")
+    public ResponseEntity<?> deleteGroup (@PathVariable("id") Long id, @RequestParam("reason") String reason) {
+        groupService.deleteGroup(id, reason);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -75,9 +72,9 @@ public class GroupController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Group>> getAllGroups(){;
+    public ResponseEntity<List<Group>> getAllGroups() {
         return ResponseEntity.status(HttpStatus.OK)
-                .body(groupService.getAll());
+                .body(groupService.getAllActiveGroups());
     }
 
     @GetMapping("/{id}")
@@ -85,5 +82,83 @@ public class GroupController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(groupService.getGroup(id));
+    }
+
+    @PostMapping("/{groupId}/request")
+    public ResponseEntity<GroupRequest> createGroupRequest(@PathVariable("groupId") Long groupId, Principal principal) {
+        String currentUsername = principal.getName();
+        User currentUser = userService.findByUsername(currentUsername);
+
+        Group group = groupService.getGroup(groupId);
+
+        // Check if the user is already a member or if a request already exists
+        if (groupService.isGroupMember(group, currentUser) || groupService.isGroupRequestExists(group, currentUser)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+
+        // Create the group request
+        GroupRequest groupRequest = new GroupRequest();
+        groupRequest.setGroup(group);
+        groupRequest.setUser(currentUser);
+        groupRequest.setApproved(false);
+        groupRequest.setAt(LocalDateTime.now());
+
+        GroupRequest createdRequest = groupService.createGroupRequest(groupRequest);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(createdRequest);
+    }
+
+    @PutMapping("/{groupId}/request/{requestId}/approve")
+    public ResponseEntity<GroupRequest> approveGroupRequest(@PathVariable("groupId") Long groupId, @PathVariable("requestId") Long requestId, Principal principal) {
+        String currentUsername = principal.getName();
+        User currentUser = userService.findByUsername(currentUsername);
+
+        Group group = groupService.getGroup(groupId);
+        GroupRequest groupRequest = groupService.getGroupRequest(requestId);
+
+        // Check if the group request belongs to the specified group
+        if (!groupRequest.getGroup().equals(group)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+
+        // Check if the current user is a GroupAdmin
+        if (!groupService.isGroupAdmin(group, currentUser)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        // Approve the group request
+        groupRequest.setApproved(true);
+        GroupRequest approvedRequest = groupService.saveGroupRequest(groupRequest);
+
+        // Add the user as a member of the group
+        User user = groupRequest.getUser();
+        groupService.addGroupMember(group, user);
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(approvedRequest);
+    }
+
+    @PutMapping("/{groupId}/request/{requestId}/reject")
+    public ResponseEntity<?> rejectGroupRequest(@PathVariable("groupId") Long groupId, @PathVariable("requestId") Long requestId) {
+        Group group = groupService.getGroup(groupId);
+        GroupRequest groupRequest = groupService.getGroupRequest(requestId);
+
+        // Check if the group request belongs to the specified group
+        if (!groupRequest.getGroup().equals(group)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+
+        // Delete the group request
+        groupService.deleteGroupRequest(groupRequest);
+
+        return ResponseEntity.status(HttpStatus.OK).build();
+    }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<Group>> getGroupsByUser(@PathVariable("userId") Long userId) {
+        User user = userService.findById(userId);
+        List<Group> groups = groupService.getGroupsByUser(user);
+        return ResponseEntity.status(HttpStatus.OK).body(groups);
     }
 }

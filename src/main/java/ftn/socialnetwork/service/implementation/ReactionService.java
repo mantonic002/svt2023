@@ -28,8 +28,8 @@ public class ReactionService {
     }
 
     @Transactional
-    public void deleteReaction(Long id) {
-        reactionRepository.deleteById(id);
+    public void deleteReaction(Reaction reaction) {
+        reactionRepository.delete(reaction);
     }
 
     public Reaction getReaction(Long id) {

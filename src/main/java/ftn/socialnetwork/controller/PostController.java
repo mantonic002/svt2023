@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -52,8 +53,20 @@ public class PostController {
     public ResponseEntity<Post> getPost(@PathVariable Long id) {
         Post post = postService.getPost(id);
         List<Comment> comments = commentService.getCommentByPost(id);
-        post.setComments(comments);
+        List<Comment> commentsWithChildren = populateChildComments(comments);
+        post.setComments(commentsWithChildren);
         return new ResponseEntity<>(post, HttpStatus.OK);
+    }
+
+    // Helper method to populate child comments recursively
+    private List<Comment> populateChildComments(List<Comment> comments) {
+        List<Comment> commentsWithChildren = new ArrayList<>();
+        for (Comment comment : comments) {
+            List<Comment> childComments = commentService.getChildComments(comment.getId());
+            comment.setChildComments(populateChildComments(childComments));
+            commentsWithChildren.add(comment);
+        }
+        return commentsWithChildren;
     }
 
     @GetMapping("/all")
@@ -87,7 +100,7 @@ public class PostController {
         if (reactedId != null) {
             System.out.println(reactedId);
 
-            reactionService.deleteReaction(reactedId);
+            reactionService.deleteReaction(reaction);
             return new ResponseEntity<>(HttpStatus.OK);
         }
         else {
@@ -113,6 +126,16 @@ public class PostController {
         return new ResponseEntity<>(addedComment, HttpStatus.CREATED);
     }
 
+    @PostMapping("/add_child_comment/{parentCommentId}")
+    public ResponseEntity<Comment> addChildComment(@PathVariable("parentCommentId") Long parentCommentId, @RequestBody Comment childComment) {
+        Comment parentComment = commentService.get(parentCommentId);
+        childComment.setParentComment(parentComment);
+        childComment.setTimestamp(LocalDateTime.now());
+        Comment addedChildComment = commentService.save(childComment);
+        return new ResponseEntity<>(addedChildComment, HttpStatus.CREATED);
+    }
+
+
     @PostMapping("/add_comment_reaction/{commentId}")
     public ResponseEntity<Reaction> addReactionToComment(@PathVariable("commentId") Long commentId, @RequestBody Reaction reaction) {
         Comment comment = commentService.get(commentId);
@@ -129,7 +152,7 @@ public class PostController {
         if (reactedId != null) {
             System.out.println(reactedId);
 
-            reactionService.deleteReaction(reactedId);
+            reactionService.deleteReaction(reaction);
             return new ResponseEntity<>(HttpStatus.OK);
         }
         else {

@@ -57,6 +57,11 @@ public class User {
     @JsonIgnore
     private List<GroupAdmin> admins = new ArrayList<>();
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<GroupRequest> groupRequests = new ArrayList<>();
+
+
     @Column
     private String displayName;
 

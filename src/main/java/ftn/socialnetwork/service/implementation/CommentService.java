@@ -43,4 +43,9 @@ public class CommentService {
         Post post = postRepository.findById(id).get();
         return post.getComments();
     }
+
+    public List<Comment> getChildComments(Long id) {
+        Comment comment = commentRepository.findById(id).get();
+        return comment.getChildComments();
+    }
 }
