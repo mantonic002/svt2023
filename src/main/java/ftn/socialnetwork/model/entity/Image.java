@@ -1,6 +1,6 @@
 package ftn.socialnetwork.model.entity;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;

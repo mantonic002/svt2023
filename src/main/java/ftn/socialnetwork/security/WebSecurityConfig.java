@@ -71,8 +71,8 @@ public class WebSecurityConfig {
         // sve neautentifikovane zahteve obradi uniformno i posalji 401 gresku
 //        http.exceptionHandling().authenticationEntryPoint(restAuthenticationEntryPoint);
         http.authorizeRequests()
-                .antMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
-                .antMatchers(HttpMethod.POST, "/api/auth/signup").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/auth/signup").permitAll()
 //                .antMatchers(HttpMethod.GET, "/api/auth/whoami").permitAll()
 //                .antMatchers(HttpMethod.GET, "/api/post/all").permitAll()
 
@@ -107,13 +107,13 @@ public class WebSecurityConfig {
         // Autentifikacija ce biti ignorisana ispod navedenih putanja (kako bismo ubrzali pristup resursima)
         // Zahtevi koji se mecuju za web.ignoring().antMatchers() nemaju pristup SecurityContext-u
         // Dozvoljena POST metoda na ruti /api/users/login, za svaki drugi tip HTTP metode greska je 401 Unauthorized
-        return (web) -> web.ignoring().antMatchers(HttpMethod.POST, "/api/auth/login")
-                .antMatchers(HttpMethod.POST, "/api/auth/signup")
+        return (web) -> web.ignoring().requestMatchers(HttpMethod.POST, "/api/auth/login")
+                .requestMatchers(HttpMethod.POST, "/api/auth/signup")
 //                .antMatchers(HttpMethod.GET, "/api/auth/whoami")
 //                .antMatchers(HttpMethod.GET, "/api/post/all")
 
                 // Ovim smo dozvolili pristup statickim resursima aplikacije
-                .antMatchers(HttpMethod.GET, "/", "/webjars/**", "/*.html", "favicon.ico",
+                .requestMatchers(HttpMethod.GET, "/", "/webjars/**", "/*.html", "favicon.ico",
                         "/**/*.html", "/**/*.css", "/**/*.js");
 
     }
