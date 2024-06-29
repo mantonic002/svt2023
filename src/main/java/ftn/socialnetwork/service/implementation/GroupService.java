@@ -1,5 +1,7 @@
 package ftn.socialnetwork.service.implementation;
 
+import ftn.socialnetwork.indexmodel.GroupIndex;
+import ftn.socialnetwork.indexrepository.GroupIndexRepository;
 import ftn.socialnetwork.model.entity.Group;
 import ftn.socialnetwork.model.entity.GroupRequest;
 import ftn.socialnetwork.model.entity.User;
@@ -20,12 +22,14 @@ import java.util.List;
 public class GroupService {
 
     public final GroupRepository repository;
-
+    public final GroupIndexRepository indexRepository;
     public final GroupRequestRepository groupRequestRepository;
 
     @Transactional
     public Group save(Group group){
         repository.save(group);
+        GroupIndex doc = new GroupIndex(group.getId(), group.getName(), group.getDescription(), group.getCreationDate(), group.isSuspended(), group.getSuspendedReason());
+        indexRepository.save(doc);
         return group;
     }
 

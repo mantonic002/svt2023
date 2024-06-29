@@ -25,7 +25,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.security.Principal;
 
 @RestController
-@RequestMapping("api/auth")
+@RequestMapping("/api/auth")
 @AllArgsConstructor
 public class AuthController {
 

@@ -35,8 +35,8 @@ public class GroupIndex {
     @Field(type = FieldType.Text, store = true, name = "description_sr", analyzer = "serbian_simple", searchAnalyzer = "serbian_simple")
     private String descriptionSr;
 
-    @Field(type = FieldType.Text, store = true, name = "description_en", analyzer = "english", searchAnalyzer = "english")
-    private String descriptionEn;
+//    @Field(type = FieldType.Text, store = true, name = "description_en", analyzer = "english", searchAnalyzer = "english")
+//    private String descriptionEn;
 
     @Field(type = FieldType.Date, store = true, name = "creation_date")
     private LocalDate creationDate;

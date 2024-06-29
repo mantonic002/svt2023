@@ -14,7 +14,7 @@ import java.util.Map;
 @Component
 public class TokenUtils {
 
-    @Value("biloKojiString")
+    @Value("${jwt.secret}")
     private String secret;
 
     @Value("3600000")
@@ -79,7 +79,10 @@ public class TokenUtils {
                 .signWith(SignatureAlgorithm.HS512, secret).compact();
     }
 
+
     public int getExpiredIn() {
         return expiration.intValue();
     }
 }
+
+
