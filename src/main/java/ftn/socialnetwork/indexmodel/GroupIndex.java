@@ -3,6 +3,7 @@ package ftn.socialnetwork.indexmodel;
 import ftn.socialnetwork.model.entity.GroupAdmin;
 import ftn.socialnetwork.model.entity.GroupRequest;
 import ftn.socialnetwork.model.entity.Post;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -15,8 +16,7 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.Setting;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
+
 
 @Getter
 @Setter
@@ -32,11 +32,13 @@ public class GroupIndex {
     @Field(type = FieldType.Text, store = true, name = "title")
     private String name;
 
+    @Nullable
     @Field(type = FieldType.Text, store = true, name = "description_sr", analyzer = "serbian_simple", searchAnalyzer = "serbian_simple")
     private String descriptionSr;
 
-//    @Field(type = FieldType.Text, store = true, name = "description_en", analyzer = "english", searchAnalyzer = "english")
-//    private String descriptionEn;
+    @Nullable
+    @Field(type = FieldType.Text, store = true, name = "description_en", analyzer = "english", searchAnalyzer = "english")
+    private String descriptionEn;
 
     @Field(type = FieldType.Date, store = true, name = "creation_date")
     private LocalDate creationDate;
@@ -52,4 +54,13 @@ public class GroupIndex {
 
     @Field(type = FieldType.Text, store = true, name = "suspended_reason")
     private String suspendedReason;
+
+
+    public GroupIndex(Long id,  String name ,LocalDate creationDate, boolean isSuspended, String suspendedReason) {
+        this.creationDate = creationDate;
+        this.isSuspended = isSuspended;
+        this.suspendedReason = suspendedReason;
+        this.name = name;
+        this.id = id;
+    }
 }

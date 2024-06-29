@@ -76,6 +76,8 @@ public class WebSecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/auth/signup").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/post/all").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/group").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/search/simple").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/search/advanced").permitAll()
 
                 // ukoliko ne zelimo da koristimo @PreAuthorize anotacije nad metodama kontrolera, moze se iskoristiti hasRole() metoda da se ogranici
                 // koji tip korisnika moze da pristupi odgovarajucoj ruti. Npr. ukoliko zelimo da definisemo da ruti 'admin' moze da pristupi
@@ -90,7 +92,7 @@ public class WebSecurityConfig {
 //                // umetni custom filter TokenAuthenticationFilter kako bi se vrsila provera JWT tokena umesto cistih korisnickog imena i lozinke (koje radi BasicAuthenticationFilter)
                 .addFilterBefore(new AuthenticationTokenFilter(userDetailsService(), tokenUtils), BasicAuthenticationFilter.class);
 
-        http.csrf().ignoringRequestMatchers("/api/auth/**", "/api/group/**", "/api/post/**");
+        http.csrf().ignoringRequestMatchers("/api/auth/**", "/api/group/**", "/api/post/**", "/api/search/**");
 
         http.authenticationProvider(authenticationProvider());
         return http.build();

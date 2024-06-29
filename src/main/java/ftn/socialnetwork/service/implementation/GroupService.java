@@ -7,6 +7,7 @@ import ftn.socialnetwork.model.entity.GroupRequest;
 import ftn.socialnetwork.model.entity.User;
 import ftn.socialnetwork.repository.GroupRepository;
 import ftn.socialnetwork.repository.GroupRequestRepository;
+import ftn.socialnetwork.service.SearchService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -22,14 +23,13 @@ import java.util.List;
 public class GroupService {
 
     public final GroupRepository repository;
-    public final GroupIndexRepository indexRepository;
+    public final SearchService searchService;
     public final GroupRequestRepository groupRequestRepository;
 
     @Transactional
     public Group save(Group group){
         repository.save(group);
-        GroupIndex doc = new GroupIndex(group.getId(), group.getName(), group.getDescription(), group.getCreationDate(), group.isSuspended(), group.getSuspendedReason());
-        indexRepository.save(doc);
+        searchService.indexDocument(group);
         return group;
     }
 
