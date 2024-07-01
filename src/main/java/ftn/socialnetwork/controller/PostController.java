@@ -1,8 +1,8 @@
 package ftn.socialnetwork.controller;
 
-import ftn.socialnetwork.model.entity.Comment;
-import ftn.socialnetwork.model.entity.Post;
-import ftn.socialnetwork.model.entity.Reaction;
+import ftn.socialnetwork.model.dto.DocumentFileDTO;
+import ftn.socialnetwork.model.entity.*;
+import ftn.socialnetwork.service.IndexingService;
 import ftn.socialnetwork.service.implementation.CommentService;
 import ftn.socialnetwork.service.implementation.PostService;
 import ftn.socialnetwork.service.implementation.ReactionService;
@@ -13,7 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import javax.transaction.Transactional;
+import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +27,7 @@ public class PostController {
     private final PostService postService;
     private final ReactionService reactionService;
     private final CommentService commentService;
+    private final IndexingService indexingService;
 
 
     @PostMapping("/add")
@@ -34,6 +35,16 @@ public class PostController {
         post.setCreationDate(LocalDateTime.now());
         Post addedPost = postService.save(post);
         return new ResponseEntity<>(addedPost, HttpStatus.CREATED);
+    }
+
+    @PostMapping("/add_file/{id}")
+    public ResponseEntity<Post> addFile(@PathVariable Long id, @ModelAttribute DocumentFileDTO documentFile) {
+        Post post = postService.getPost(id);
+        File file = indexingService.indexDocument(documentFile.file(), "post", id);
+        post.setFile(file);
+        file.setPost(post);
+        postService.save(post);
+        return new ResponseEntity<>(post, HttpStatus.CREATED);
     }
 
     @PutMapping("/update")

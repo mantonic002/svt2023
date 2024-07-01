@@ -1,6 +1,6 @@
 package ftn.socialnetwork.model.entity;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -46,6 +46,10 @@ public class Group {
 
     @Column(nullable = false)
     private boolean isSuspended;
+
+    @OneToOne(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private File file;
 
     @Column
     private String suspendedReason;

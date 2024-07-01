@@ -5,12 +5,14 @@ import ftn.socialnetwork.model.entity.GroupRequest;
 import ftn.socialnetwork.model.entity.User;
 import ftn.socialnetwork.repository.GroupRepository;
 import ftn.socialnetwork.repository.GroupRequestRepository;
+import ftn.socialnetwork.service.GroupSearchService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
-import javax.persistence.EntityNotFoundException;
-import javax.transaction.Transactional;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,12 +22,13 @@ import java.util.List;
 public class GroupService {
 
     public final GroupRepository repository;
-
+    public final GroupSearchService searchService;
     public final GroupRequestRepository groupRequestRepository;
 
     @Transactional
     public Group save(Group group){
         repository.save(group);
+        searchService.indexDocument(group);
         return group;
     }
 

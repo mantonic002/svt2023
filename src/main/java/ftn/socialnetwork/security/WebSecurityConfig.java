@@ -45,6 +45,7 @@ public class WebSecurityConfig {
 
         return authProvider;
     }
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -71,31 +72,30 @@ public class WebSecurityConfig {
         // sve neautentifikovane zahteve obradi uniformno i posalji 401 gresku
 //        http.exceptionHandling().authenticationEntryPoint(restAuthenticationEntryPoint);
         http.authorizeRequests()
-                .antMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
-                .antMatchers(HttpMethod.POST, "/api/auth/signup").permitAll()
-//                .antMatchers(HttpMethod.GET, "/api/auth/whoami").permitAll()
-//                .antMatchers(HttpMethod.GET, "/api/post/all").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/auth/signup").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/post/all").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/group").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/search/simple").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/search/advanced").permitAll()
 
                 // ukoliko ne zelimo da koristimo @PreAuthorize anotacije nad metodama kontrolera, moze se iskoristiti hasRole() metoda da se ogranici
                 // koji tip korisnika moze da pristupi odgovarajucoj ruti. Npr. ukoliko zelimo da definisemo da ruti 'admin' moze da pristupi
                 // samo korisnik koji ima rolu 'ADMIN', navodimo na sledeci nacin:
-                // .antMatchers("/admin").hasRole("ADMIN") ili .antMatchers("/admin").hasAuthority("ROLE_ADMIN")
+                // .requestMatchers("/admin").hasRole("ADMIN") ili .requestMatchers("/admin").hasAuthority("ROLE_ADMIN")
 
                 // za svaki drugi zahtev korisnik mora biti autentifikovan
                 .anyRequest().authenticated().and()
                 // za development svrhe ukljuci konfiguraciju za CORS iz WebConfig klase
                 .cors().and()
-//
+
 //                // umetni custom filter TokenAuthenticationFilter kako bi se vrsila provera JWT tokena umesto cistih korisnickog imena i lozinke (koje radi BasicAuthenticationFilter)
                 .addFilterBefore(new AuthenticationTokenFilter(userDetailsService(), tokenUtils), BasicAuthenticationFilter.class);
 
-        // zbog jednostavnosti primera ne koristimo Anti-CSRF token (https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html)
-        http.csrf().disable();
+        http.csrf().ignoringRequestMatchers("/api/auth/**", "/api/group/**", "/api/post/**", "/api/search/**");
 
-
-        // ulancavanje autentifikacije
         http.authenticationProvider(authenticationProvider());
-
         return http.build();
     }
 
@@ -105,16 +105,16 @@ public class WebSecurityConfig {
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
         // Autentifikacija ce biti ignorisana ispod navedenih putanja (kako bismo ubrzali pristup resursima)
-        // Zahtevi koji se mecuju za web.ignoring().antMatchers() nemaju pristup SecurityContext-u
+        // Zahtevi koji se mecuju za web.ignoring().requestMatchers() nemaju pristup SecurityContext-u
         // Dozvoljena POST metoda na ruti /api/users/login, za svaki drugi tip HTTP metode greska je 401 Unauthorized
-        return (web) -> web.ignoring().antMatchers(HttpMethod.POST, "/api/auth/login")
-                .antMatchers(HttpMethod.POST, "/api/auth/signup")
-//                .antMatchers(HttpMethod.GET, "/api/auth/whoami")
-//                .antMatchers(HttpMethod.GET, "/api/post/all")
+        return (web) -> web.ignoring().requestMatchers(HttpMethod.POST, "/api/auth/login")
+                .requestMatchers(HttpMethod.POST, "/api/auth/signup")
+//                .requestMatchers(HttpMethod.GET, "/api/auth/whoami")
+//                .requestMatchers(HttpMethod.GET, "/api/post/all")
 
                 // Ovim smo dozvolili pristup statickim resursima aplikacije
-                .antMatchers(HttpMethod.GET, "/", "/webjars/**", "/*.html", "favicon.ico",
-                        "/**/*.html", "/**/*.css", "/**/*.js");
+                .requestMatchers(HttpMethod.GET, "/", "/webjars/**", "/**.html", "favicon.ico",
+                        "/**.html", "/**.css", "/**.js");
 
     }
 }

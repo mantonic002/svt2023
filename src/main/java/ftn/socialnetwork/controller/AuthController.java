@@ -21,11 +21,11 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import java.security.Principal;
 
 @RestController
-@RequestMapping("api/auth")
+@RequestMapping("/api/auth")
 @AllArgsConstructor
 public class AuthController {
 

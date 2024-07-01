@@ -1,0 +1,67 @@
+version: "3.7"
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.4.3
+    container_name: social-network-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+      - xpack.security.enabled=false
+      - ES_TMPDIR=/usr/share/elasticsearch/tmp
+    ports:
+      - "9200:9200"
+    networks:
+      - social-network-network
+    volumes:
+      - es_tmpdata:/usr/share/elasticsearch/tmp
+    restart: always
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.4.3
+    container_name: social-network-logstash
+    ports:
+      - "5044:5044"
+    volumes:
+      - "./logstash-ingest-data/:/usr/share/logstash/ingest_data/"
+      - "./logstash-config/logstash.conf:/usr/share/logstash/pipeline/logstash.conf"
+    restart: always
+    networks:
+      - social-network-network
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.4.3
+    container_name: social-network-kibana
+    ports:
+      - "5601:5601"
+    networks:
+      - social-network-network
+    restart: always
+
+  minio:
+    image: quay.io/minio/minio
+    container_name: social-network-minio
+    ports:
+      - 9000:9000
+      - 9090:9090
+    environment:
+      - MINIO_ROOT_USER=ROOT
+      - MINIO_ROOT_PASSWORD=ROOTROOT
+    command: server /data --console-address ":9090"
+    volumes:
+      - minio-data:/data
+    restart: always
+    networks:
+      - social-network-network
+
+networks:
+  social-network-network:
+    name: social-network-network
+
+volumes:
+  minio-data:
+  es_tmpdata:
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+      o: "size=100m,uid=1000,gid=1000,mode=1777"
+
