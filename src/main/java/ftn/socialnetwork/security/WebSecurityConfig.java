@@ -72,11 +72,11 @@ public class WebSecurityConfig {
         // sve neautentifikovane zahteve obradi uniformno i posalji 401 gresku
 //        http.exceptionHandling().authenticationEntryPoint(restAuthenticationEntryPoint);
         http.authorizeRequests()
+                .requestMatchers(HttpMethod.POST, "/api/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/auth/signup").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/post/all").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/group").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/group/**").permitAll() //temporary for testing
                 .requestMatchers(HttpMethod.POST, "/api/search/simple").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/search/advanced").permitAll()
 

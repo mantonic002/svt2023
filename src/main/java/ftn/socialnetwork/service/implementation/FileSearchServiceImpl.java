@@ -36,27 +36,30 @@ public class FileSearchServiceImpl implements FileSearchService {
 
 
     private Query buildSimpleSearchQuery(List<String> tokens, String type) {
-        return BoolQuery.of(q -> q.must(mb -> mb.bool(b -> {
-            tokens.forEach(token -> {
-                // Match Query - full-text search with fuzziness
-                // Matches documents with fuzzy matching in "title" field
-                b.should(sb -> sb.match(
-                    m -> m.field("title").fuzziness(Fuzziness.ONE.asString()).query(token)));
+        return BoolQuery.of(q -> q
+                .must(mb -> mb.bool(b -> {
+                    tokens.forEach(token -> {
+                        // Match Query - full-text search with fuzziness
+                        // Matches documents with fuzzy matching in "title" field
+                        b.should(sb -> sb.match(
+                                m -> m.field("title").fuzziness(Fuzziness.ONE.asString()).query(token)));
 
-                // Match Query - full-text search in other fields
-                // Matches documents with full-text search in other fields
-                b.should(sb -> sb.match(m -> m.field("content_sr").query(token)));
-                b.should(sb -> sb.match(m -> m.field("content_en").query(token)));
-            });
-//            if (Objects.equals(type, "group")) {
-//                // Ensure documents have a group_id
-//                b.filter(fb -> fb.exists(e -> e.field("group_id")));
-//            } else if (Objects.equals(type, "post")) {
-//                // Ensure documents have a post_id
-//                b.filter(fb -> fb.exists(e -> e.field("post_id")));
-//            }
-            return b;
-        })))._toQuery();
+                        // Match Query - full-text search in other fields
+                        // Matches documents with full-text search in other fields
+                        b.should(sb -> sb.match(m -> m.field("content_sr").query(token)));
+                        b.should(sb -> sb.match(m -> m.field("content_en").query(token)));
+                    });
+                    return b;
+                }))
+                .filter(fb -> {
+                    if ("group".equals(type)) {
+                        fb.exists(e -> e.field("group_id"));
+                    } else if ("post".equals(type)) {
+                        fb.exists(e -> e.field("post_id"));
+                    }
+                    return fb;
+                })
+        )._toQuery();
     }
 
 

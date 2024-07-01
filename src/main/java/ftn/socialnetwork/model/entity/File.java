@@ -29,4 +29,8 @@ public class File {
     @OneToOne
     @JoinColumn(name = "group_id")
     private Group group;
+
+    @OneToOne
+    @JoinColumn(name = "post_id")
+    private Post post;
 }

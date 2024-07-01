@@ -4,6 +4,8 @@ import ftn.socialnetwork.model.entity.Group;
 import ftn.socialnetwork.model.entity.Post;
 import ftn.socialnetwork.repository.GroupRepository;
 import ftn.socialnetwork.repository.PostRepository;
+import ftn.socialnetwork.service.GroupSearchService;
+import ftn.socialnetwork.service.PostSearchService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,9 +23,14 @@ public class PostService {
 
     public final GroupRepository groupRepository;
 
+    public final PostSearchService searchService;
+
+
     @Transactional
     public Post save(Post post) {
-        return postRepository.save(post);
+        postRepository.save(post);
+        searchService.indexDocument(post);
+        return post;
     }
 
     @Transactional

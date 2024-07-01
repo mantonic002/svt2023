@@ -25,6 +25,9 @@ public class Post {
     private Long id;
 
     @Column
+    private String title;
+
+    @Column
     private String content;
 
     @Column
@@ -46,6 +49,10 @@ public class Post {
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @BatchSize(size = 10) // Adjust the batch size as per your requirements
     private List<Comment> comments = new ArrayList<>();
+
+    @OneToOne(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private File file;
 
     public Post() {
         this.creationDate = LocalDateTime.now();
