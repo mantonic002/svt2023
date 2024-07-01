@@ -47,6 +47,10 @@ public class Group {
     @Column(nullable = false)
     private boolean isSuspended;
 
+    @OneToOne(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private File file;
+
     @Column
     private String suspendedReason;
 

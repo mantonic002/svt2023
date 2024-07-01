@@ -1,15 +1,14 @@
 package ftn.socialnetwork.service.implementation;
 
-import ftn.socialnetwork.indexmodel.GroupIndex;
-import ftn.socialnetwork.indexrepository.GroupIndexRepository;
 import ftn.socialnetwork.model.entity.Group;
 import ftn.socialnetwork.model.entity.GroupRequest;
 import ftn.socialnetwork.model.entity.User;
 import ftn.socialnetwork.repository.GroupRepository;
 import ftn.socialnetwork.repository.GroupRequestRepository;
-import ftn.socialnetwork.service.SearchService;
+import ftn.socialnetwork.service.GroupSearchService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -23,7 +22,7 @@ import java.util.List;
 public class GroupService {
 
     public final GroupRepository repository;
-    public final SearchService searchService;
+    public final GroupSearchService searchService;
     public final GroupRequestRepository groupRequestRepository;
 
     @Transactional

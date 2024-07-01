@@ -1,6 +1,8 @@
 package ftn.socialnetwork.controller;
 
+import ftn.socialnetwork.model.dto.DocumentFileDTO;
 import ftn.socialnetwork.model.entity.*;
+import ftn.socialnetwork.service.IndexingService;
 import ftn.socialnetwork.service.UserService;
 import ftn.socialnetwork.service.implementation.GroupService;
 import ftn.socialnetwork.service.implementation.PostService;
@@ -27,23 +29,39 @@ public class GroupController {
 
     private final UserService userService;
 
+    private final IndexingService indexingService;
+
+
     @PostMapping
     public ResponseEntity<Group> createGroup(@RequestBody Group group, Principal principal) {
-        String currentUsername = principal.getName();
-        User currentUser = userService.findByUsername(currentUsername);
+        if (principal != null){
+            String currentUsername = principal.getName();
+            User currentUser = userService.findByUsername(currentUsername);
+
+            GroupAdmin admin = new GroupAdmin();
+            admin.setUser(currentUser);
+            admin.setGroup(group);
+            group.getAdmins().add(admin);
+        }
+
 
         group.setCreationDate(LocalDate.now());
         group.setSuspended(false);
-
-        GroupAdmin admin = new GroupAdmin();
-        admin.setUser(currentUser);
-        admin.setGroup(group);
-        group.getAdmins().add(admin);
 
         groupService.save(group);
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(group);
+    }
+
+    @PostMapping("/add_file/{id}")
+    public ResponseEntity<Group> addFile(@PathVariable Long id, @ModelAttribute DocumentFileDTO documentFile) {
+        Group group = groupService.getGroup(id);
+        File file = indexingService.indexDocument(documentFile.file(), "group", id);
+        group.setFile(file);
+        file.setGroup(group);
+        groupService.save(group);
+        return new ResponseEntity<>(group, HttpStatus.CREATED);
     }
 
     @PutMapping("/update")

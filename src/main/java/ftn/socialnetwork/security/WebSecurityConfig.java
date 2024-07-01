@@ -76,6 +76,7 @@ public class WebSecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/auth/signup").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/post/all").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/group").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/group/**").permitAll() //temporary for testing
                 .requestMatchers(HttpMethod.POST, "/api/search/simple").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/search/advanced").permitAll()
 

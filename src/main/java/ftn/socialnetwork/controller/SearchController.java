@@ -3,7 +3,7 @@ package ftn.socialnetwork.controller;
 
 import ftn.socialnetwork.indexmodel.GroupIndex;
 import ftn.socialnetwork.model.dto.SearchQueryDTO;
-import ftn.socialnetwork.service.SearchService;
+import ftn.socialnetwork.service.GroupSearchService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class SearchController {
 
-    private final SearchService searchService;
+    private final GroupSearchService searchService;
 
     @PostMapping("/simple")
     public Page<GroupIndex> simpleSearch(@RequestBody SearchQueryDTO simpleSearchQuery,

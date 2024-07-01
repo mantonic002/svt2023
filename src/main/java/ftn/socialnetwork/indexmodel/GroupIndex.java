@@ -29,7 +29,7 @@ public class GroupIndex {
     @Id
     private Long id;
 
-    @Field(type = FieldType.Text, store = true, name = "title")
+    @Field(type = FieldType.Text, store = true, name = "name")
     private String name;
 
     @Nullable
