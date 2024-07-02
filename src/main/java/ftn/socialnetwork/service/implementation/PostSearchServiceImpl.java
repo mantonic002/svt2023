@@ -3,6 +3,7 @@ package ftn.socialnetwork.service.implementation;
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.json.JsonData;
 import ftn.socialnetwork.exceptionhandling.exception.MalformedQueryException;
 import ftn.socialnetwork.indexmodel.FileIndex;
 import ftn.socialnetwork.indexmodel.PostIndex;
@@ -53,6 +54,19 @@ public class PostSearchServiceImpl implements PostSearchService {
         return post.getTitle();
     }
 
+    @Override
+    public PostIndex updatePostLikeNum(Long id) {
+        var searchQuery = new NativeQueryBuilder()
+                .withQuery(sb -> sb.match(
+                        m -> m.field("id").query(id)))
+                .build();
+
+        Page<PostIndex> posts = runQuery(searchQuery);
+        PostIndex post = posts.getContent().get(0);
+        post.setLikeNumber(post.getLikeNumber() + 1);
+        return indexRepository.save(post);
+    }
+
     private String detectLanguage(String text) {
         var detectedLanguage = languageDetector.detect(text).getLanguage().toUpperCase();
         if (detectedLanguage.equals("HR")) {
@@ -83,6 +97,14 @@ public class PostSearchServiceImpl implements PostSearchService {
         return runQuery(searchQueryBuilder.build());
     }
 
+    @Override
+    public Page<PostIndex> rangeSearch(Integer min, Integer max, Pageable pageable) {
+        var searchQueryBuilder =
+                new NativeQueryBuilder().withQuery(buildRangeSearchQuery(min, max))
+                        .withPageable(pageable);
+
+        return runQuery(searchQueryBuilder.build());
+    }
 
     @Override
     public Page<PostIndex> advancedSearch(List<String> expression, Pageable pageable) {
@@ -117,6 +139,17 @@ public class PostSearchServiceImpl implements PostSearchService {
             if (!postIdsFromFiles.isEmpty()) {
                 b.should(sb -> sb.terms(t -> t.field("id").terms(tq -> tq.value(postIdsFromFiles))));
             }
+
+            return b;
+        })))._toQuery();
+    }
+
+    private Query buildRangeSearchQuery(Integer min, Integer max) {
+        return BoolQuery.of(q -> q.must(mb -> mb.bool(b -> {
+            // Match Query - full-text search in other fields
+            // Matches documents with full-text search in other fields
+            b.must(sb -> sb.range(m -> m.field("like_number").gte(JsonData.of(min))));
+            b.must(sb -> sb.range(m -> m.field("like_number").lte(JsonData.of(max))));
 
             return b;
         })))._toQuery();

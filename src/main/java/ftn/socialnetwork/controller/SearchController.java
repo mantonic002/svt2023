@@ -9,10 +9,7 @@ import ftn.socialnetwork.service.PostSearchService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/search")
@@ -28,11 +25,24 @@ public class SearchController {
         return searchService.simpleSearch(simpleSearchQuery.keywords(), pageable);
     }
 
+    @PostMapping("/group/range/{min}:{max}")
+    public Page<GroupIndex> rangeSearch(@PathVariable Integer min, @PathVariable Integer max,
+                                         Pageable pageable) {
+        return searchService.rangeSearch(min, max, pageable);
+    }
+
     @PostMapping("/post/simple")
     public Page<PostIndex> simplePostSearch(@RequestBody SearchQueryDTO simpleSearchQuery,
                                             Pageable pageable) {
         return postSearchService.simpleSearch(simpleSearchQuery.keywords(), pageable);
     }
+
+    @PostMapping("/post/range/{min}:{max}")
+    public Page<PostIndex> rangePostSearch(@PathVariable Integer min, @PathVariable Integer max,
+                                        Pageable pageable) {
+        return postSearchService.rangeSearch(min, max, pageable);
+    }
+
 
 
     @PostMapping("/advanced")

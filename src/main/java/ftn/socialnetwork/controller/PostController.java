@@ -2,7 +2,9 @@ package ftn.socialnetwork.controller;
 
 import ftn.socialnetwork.model.dto.DocumentFileDTO;
 import ftn.socialnetwork.model.entity.*;
+import ftn.socialnetwork.service.GroupSearchService;
 import ftn.socialnetwork.service.IndexingService;
+import ftn.socialnetwork.service.PostSearchService;
 import ftn.socialnetwork.service.implementation.CommentService;
 import ftn.socialnetwork.service.implementation.PostService;
 import ftn.socialnetwork.service.implementation.ReactionService;
@@ -28,7 +30,7 @@ public class PostController {
     private final ReactionService reactionService;
     private final CommentService commentService;
     private final IndexingService indexingService;
-
+    private final PostSearchService searchService;
 
     @PostMapping("/add")
     public ResponseEntity<Post> createPost(@RequestBody Post post) {
@@ -96,9 +98,6 @@ public class PostController {
     public ResponseEntity<Reaction> addReactionToPost(@PathVariable("postId") Long postId, @RequestBody Reaction reaction) {
         Post post = postService.getPost(postId);
 
-//        boolean userHasReacted = post.getReactions().stream()
-//                .anyMatch(r -> r.getUserId().equals(reaction.getUserId()));
-
         Long reactedId = null;
 
         for (Reaction r :  post.getReactions()) {
@@ -117,6 +116,9 @@ public class PostController {
         else {
             reaction.setPost(post);
             Reaction addedReaction = reactionService.save(reaction);
+            if(addedReaction.getReactionType() == ReactionType.LIKE) {
+                searchService.updatePostLikeNum(postId);
+            }
             return new ResponseEntity<>(addedReaction, HttpStatus.CREATED);
         }
 
@@ -169,6 +171,15 @@ public class PostController {
         else {
             reaction.setComment(comment);
             Reaction addedReaction = reactionService.save(reaction);
+            if(addedReaction.getReactionType() == ReactionType.LIKE) {
+                Long postId;
+                if (comment.getPost() != null) {
+                    postId = comment.getPost().getId();
+                } else {
+                    postId = comment.getParentComment().getPost().getId();
+                }
+                searchService.updatePostLikeNum(postId);
+            }
             return new ResponseEntity<>(addedReaction, HttpStatus.CREATED);
         }
 

@@ -13,7 +13,11 @@ public interface PostSearchService {
     @Transactional
     String indexDocument(Post post);
 
+    PostIndex updatePostLikeNum(Long id);
+
     Page<PostIndex> simpleSearch(List<String> keywords, Pageable pageable);
+
+    Page<PostIndex> rangeSearch(Integer min, Integer max, Pageable pageable);
 
     Page<PostIndex> advancedSearch(List<String> expression, Pageable pageable);
 }

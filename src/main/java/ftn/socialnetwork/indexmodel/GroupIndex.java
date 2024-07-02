@@ -43,17 +43,14 @@ public class GroupIndex {
     @Field(type = FieldType.Date, store = true, name = "creation_date")
     private LocalDate creationDate;
 
-//    private List<Post> posts = new ArrayList<>();
-
-//    private List<GroupAdmin> admins = new ArrayList<>();
-
-//    private List<GroupRequest> groupRequests = new ArrayList<>();
-
     @Field(type = FieldType.Boolean, store = true, name = "suspended")
     private boolean isSuspended;
 
     @Field(type = FieldType.Text, store = true, name = "suspended_reason")
     private String suspendedReason;
+
+    @Field(type = FieldType.Integer, store = true, name = "post_number")
+    private Integer postNumber;
 
 
     public GroupIndex(Long id,  String name ,LocalDate creationDate, boolean isSuspended, String suspendedReason) {
@@ -62,5 +59,6 @@ public class GroupIndex {
         this.suspendedReason = suspendedReason;
         this.name = name;
         this.id = id;
+        this.postNumber = 0;
     }
 }
