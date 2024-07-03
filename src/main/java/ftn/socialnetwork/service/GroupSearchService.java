@@ -14,7 +14,11 @@ public interface GroupSearchService {
     @Transactional
     String indexDocument(Group group);
 
+    GroupIndex updateGroupPostNum(Long id);
+
     Page<GroupIndex> simpleSearch(List<String> keywords, Pageable pageable);
+
+    Page<GroupIndex> rangeSearch(Integer min, Integer max, Pageable pageable);
 
     Page<GroupIndex> advancedSearch(List<String> expression, Pageable pageable);
 }

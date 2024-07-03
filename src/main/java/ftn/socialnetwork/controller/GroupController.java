@@ -2,6 +2,7 @@ package ftn.socialnetwork.controller;
 
 import ftn.socialnetwork.model.dto.DocumentFileDTO;
 import ftn.socialnetwork.model.entity.*;
+import ftn.socialnetwork.service.GroupSearchService;
 import ftn.socialnetwork.service.IndexingService;
 import ftn.socialnetwork.service.UserService;
 import ftn.socialnetwork.service.implementation.GroupService;
@@ -30,6 +31,9 @@ public class GroupController {
     private final UserService userService;
 
     private final IndexingService indexingService;
+
+    private final GroupSearchService searchService;
+
 
 
     @PostMapping
@@ -86,6 +90,7 @@ public class GroupController {
         post.setGroup(group);
         post.setCreationDate(LocalDateTime.now());
         Post addedPost = postService.save(post);
+        searchService.updateGroupPostNum(id);
         return new ResponseEntity<>(addedPost, HttpStatus.CREATED);
     }
 

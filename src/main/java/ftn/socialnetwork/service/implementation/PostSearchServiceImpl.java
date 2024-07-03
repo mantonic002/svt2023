@@ -3,6 +3,7 @@ package ftn.socialnetwork.service.implementation;
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.json.JsonData;
 import ftn.socialnetwork.exceptionhandling.exception.MalformedQueryException;
 import ftn.socialnetwork.indexmodel.FileIndex;
 import ftn.socialnetwork.indexmodel.PostIndex;
@@ -23,6 +24,7 @@ import org.springframework.data.elasticsearch.core.SearchHitSupport;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -51,6 +53,19 @@ public class PostSearchServiceImpl implements PostSearchService {
         indexRepository.save(newEntity);
 
         return post.getTitle();
+    }
+
+    @Override
+    public PostIndex updatePostLikeNum(Long id) {
+        var searchQuery = new NativeQueryBuilder()
+                .withQuery(sb -> sb.match(
+                        m -> m.field("id").query(id)))
+                .build();
+
+        Page<PostIndex> posts = runQuery(searchQuery);
+        PostIndex post = posts.getContent().get(0);
+        post.setLikeNumber(post.getLikeNumber() + 1);
+        return indexRepository.save(post);
     }
 
     private String detectLanguage(String text) {
@@ -83,21 +98,45 @@ public class PostSearchServiceImpl implements PostSearchService {
         return runQuery(searchQueryBuilder.build());
     }
 
-
     @Override
-    public Page<PostIndex> advancedSearch(List<String> expression, Pageable pageable) {
-        if (expression.size() != 3) {
-            throw new MalformedQueryException("Search query malformed.");
-        }
-
-        String operation = expression.get(1);
-        expression.remove(1);
+    public Page<PostIndex> rangeSearch(Integer min, Integer max, Pageable pageable) {
         var searchQueryBuilder =
-            new NativeQueryBuilder().withQuery(buildAdvancedSearchQuery(expression, operation))
-                .withPageable(pageable);
+                new NativeQueryBuilder().withQuery(buildRangeSearchQuery(min, max))
+                        .withPageable(pageable);
 
         return runQuery(searchQueryBuilder.build());
     }
+
+    @Override
+    public Page<PostIndex> advancedSearch(List<String> expression, Pageable pageable) {
+        if (expression.size() != 4) {
+            throw new MalformedQueryException("Search query malformed.");
+        }
+        String operation = expression.get(3);
+        expression.remove(3);
+
+        var valueFIle = expression.get(2).split(":")[1];
+        expression.remove(2);
+
+        List<String> fileKeywords = new ArrayList<>();
+        fileKeywords.add(valueFIle);
+        // Search for files related to groups
+        Page<FileIndex> fileResults = fileSearchService.simpleSearch(fileKeywords, pageable, "post");
+
+        // Extract post ids from fileResults
+        List<FieldValue> postIdsFromFiles = fileResults.getContent().stream()
+                .map(FileIndex::getPostId)
+                .distinct()
+                .map(FieldValue::of)
+                .toList();
+
+        var searchQueryBuilder =
+                new NativeQueryBuilder().withQuery(buildAdvancedSearchQuery(expression, operation, postIdsFromFiles))
+                        .withPageable(pageable);
+
+        return runQuery(searchQueryBuilder.build());
+    }
+
 
     private Query buildSimpleSearchQuery(List<String> tokens, List<FieldValue> postIdsFromFiles) {
         return BoolQuery.of(q -> q.must(mb -> mb.bool(b -> {
@@ -122,7 +161,18 @@ public class PostSearchServiceImpl implements PostSearchService {
         })))._toQuery();
     }
 
-    private Query buildAdvancedSearchQuery(List<String> operands, String operation) {
+    private Query buildRangeSearchQuery(Integer min, Integer max) {
+        return BoolQuery.of(q -> q.must(mb -> mb.bool(b -> {
+            // Match Query - full-text search in other fields
+            // Matches documents with full-text search in other fields
+            b.must(sb -> sb.range(m -> m.field("like_number").gte(JsonData.of(min))));
+            b.must(sb -> sb.range(m -> m.field("like_number").lte(JsonData.of(max))));
+
+            return b;
+        })))._toQuery();
+    }
+
+    private Query buildAdvancedSearchQuery(List<String> operands, String operation, List<FieldValue> IdsFromFiles) {
         return BoolQuery.of(q -> q.must(mb -> mb.bool(b -> {
             var field1 = operands.get(0).split(":")[0];
             var value1 = operands.get(0).split(":")[1];
@@ -132,18 +182,19 @@ public class PostSearchServiceImpl implements PostSearchService {
             switch (operation) {
                 case "AND":
                     b.must(sb -> sb.match(
-                        m -> m.field(field1).fuzziness(Fuzziness.ONE.asString()).query(value1)));
+                            m -> m.field(field1).fuzziness(Fuzziness.ONE.asString()).query(value1)));
                     b.must(sb -> sb.match(m -> m.field(field2).query(value2)));
+                    if (!IdsFromFiles.isEmpty()) {
+                        b.must(sb -> sb.terms(t -> t.field("id").terms(tq -> tq.value(IdsFromFiles))));
+                    }
                     break;
                 case "OR":
                     b.should(sb -> sb.match(
-                        m -> m.field(field1).fuzziness(Fuzziness.ONE.asString()).query(value1)));
+                            m -> m.field(field1).fuzziness(Fuzziness.ONE.asString()).query(value1)));
                     b.should(sb -> sb.match(m -> m.field(field2).query(value2)));
-                    break;
-                case "NOT":
-                    b.must(sb -> sb.match(
-                        m -> m.field(field1).fuzziness(Fuzziness.ONE.asString()).query(value1)));
-                    b.mustNot(sb -> sb.match(m -> m.field(field2).query(value2)));
+                    if (!IdsFromFiles.isEmpty()) {
+                        b.should(sb -> sb.terms(t -> t.field("id").terms(tq -> tq.value(IdsFromFiles))));
+                    }
                     break;
             }
 

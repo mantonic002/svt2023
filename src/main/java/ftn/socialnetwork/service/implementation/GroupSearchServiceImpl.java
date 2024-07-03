@@ -3,6 +3,7 @@ package ftn.socialnetwork.service.implementation;
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.json.JsonData;
 import ftn.socialnetwork.exceptionhandling.exception.MalformedQueryException;
 import ftn.socialnetwork.indexmodel.FileIndex;
 import ftn.socialnetwork.indexmodel.GroupIndex;
@@ -13,7 +14,6 @@ import ftn.socialnetwork.service.GroupSearchService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.apache.tika.language.detect.LanguageDetector;
-import org.slf4j.Logger;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.elasticsearch.common.unit.Fuzziness;
@@ -24,9 +24,8 @@ import org.springframework.data.elasticsearch.core.SearchHitSupport;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -55,6 +54,20 @@ public class GroupSearchServiceImpl implements GroupSearchService {
 
         return group.getName();
     }
+
+    @Override
+    public GroupIndex updateGroupPostNum(Long id) {
+        var searchQuery = new NativeQueryBuilder()
+                .withQuery(sb -> sb.match(
+                        m -> m.field("id").query(id)))
+                .build();
+
+        Page<GroupIndex> groups = runQuery(searchQuery);
+        GroupIndex group = groups.getContent().get(0);
+        group.setPostNumber(group.getPostNumber() + 1);
+        return indexRepository.save(group);
+    }
+
 
     private String detectLanguage(String text) {
         var detectedLanguage = languageDetector.detect(text).getLanguage().toUpperCase();
@@ -86,17 +99,40 @@ public class GroupSearchServiceImpl implements GroupSearchService {
         return runQuery(searchQueryBuilder.build());
     }
 
+    @Override
+    public Page<GroupIndex> rangeSearch(Integer min, Integer max, Pageable pageable) {
+        var searchQueryBuilder =
+                new NativeQueryBuilder().withQuery(buildRangeSearchQuery(min, max))
+                        .withPageable(pageable);
+
+        return runQuery(searchQueryBuilder.build());
+    }
 
     @Override
     public Page<GroupIndex> advancedSearch(List<String> expression, Pageable pageable) {
-        if (expression.size() != 3) {
+        if (expression.size() != 4) {
             throw new MalformedQueryException("Search query malformed.");
         }
+        String operation = expression.get(3);
+        expression.remove(3);
 
-        String operation = expression.get(1);
-        expression.remove(1);
+        var valueFIle = expression.get(2).split(":")[1];
+        expression.remove(2);
+
+        List<String> fileKeywords = new ArrayList<>();
+        fileKeywords.add(valueFIle);
+        // Search for files related to groups
+        Page<FileIndex> fileResults = fileSearchService.simpleSearch(fileKeywords, pageable, "group");
+
+        // Extract group ids from fileResults
+        List<FieldValue> groupIdsFromFiles = fileResults.getContent().stream()
+                .map(FileIndex::getGroupId)
+                .distinct()
+                .map(FieldValue::of)
+                .toList();
+
         var searchQueryBuilder =
-            new NativeQueryBuilder().withQuery(buildAdvancedSearchQuery(expression, operation))
+            new NativeQueryBuilder().withQuery(buildAdvancedSearchQuery(expression, operation, groupIdsFromFiles))
                 .withPageable(pageable);
 
         return runQuery(searchQueryBuilder.build());
@@ -125,7 +161,18 @@ public class GroupSearchServiceImpl implements GroupSearchService {
         })))._toQuery();
     }
 
-    private Query buildAdvancedSearchQuery(List<String> operands, String operation) {
+    private Query buildRangeSearchQuery(Integer min, Integer max) {
+        return BoolQuery.of(q -> q.must(mb -> mb.bool(b -> {
+            // Match Query - full-text search in other fields
+            // Matches documents with full-text search in other fields
+            b.must(sb -> sb.range(m -> m.field("post_number").gte(JsonData.of(min))));
+            b.must(sb -> sb.range(m -> m.field("post_number").lte(JsonData.of(max))));
+
+            return b;
+        })))._toQuery();
+    }
+
+    private Query buildAdvancedSearchQuery(List<String> operands, String operation, List<FieldValue> groupIdsFromFiles) {
         return BoolQuery.of(q -> q.must(mb -> mb.bool(b -> {
             var field1 = operands.get(0).split(":")[0];
             var value1 = operands.get(0).split(":")[1];
@@ -137,16 +184,17 @@ public class GroupSearchServiceImpl implements GroupSearchService {
                     b.must(sb -> sb.match(
                         m -> m.field(field1).fuzziness(Fuzziness.ONE.asString()).query(value1)));
                     b.must(sb -> sb.match(m -> m.field(field2).query(value2)));
+                    if (!groupIdsFromFiles.isEmpty()) {
+                        b.must(sb -> sb.terms(t -> t.field("id").terms(tq -> tq.value(groupIdsFromFiles))));
+                    }
                     break;
                 case "OR":
                     b.should(sb -> sb.match(
                         m -> m.field(field1).fuzziness(Fuzziness.ONE.asString()).query(value1)));
                     b.should(sb -> sb.match(m -> m.field(field2).query(value2)));
-                    break;
-                case "NOT":
-                    b.must(sb -> sb.match(
-                        m -> m.field(field1).fuzziness(Fuzziness.ONE.asString()).query(value1)));
-                    b.mustNot(sb -> sb.match(m -> m.field(field2).query(value2)));
+                    if (!groupIdsFromFiles.isEmpty()) {
+                        b.should(sb -> sb.terms(t -> t.field("id").terms(tq -> tq.value(groupIdsFromFiles))));
+                    }
                     break;
             }
 
@@ -155,7 +203,6 @@ public class GroupSearchServiceImpl implements GroupSearchService {
     }
 
     private Page<GroupIndex> runQuery(NativeQuery searchQuery) {
-
         var searchHits = elasticsearchTemplate.search(searchQuery, GroupIndex.class,
             IndexCoordinates.of("group_index"));
 

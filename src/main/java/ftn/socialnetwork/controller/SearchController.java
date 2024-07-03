@@ -9,10 +9,7 @@ import ftn.socialnetwork.service.PostSearchService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/search")
@@ -23,9 +20,21 @@ public class SearchController {
     private final PostSearchService postSearchService;
 
     @PostMapping("/group/simple")
-    public Page<GroupIndex> simpleSearch(@RequestBody SearchQueryDTO simpleSearchQuery,
+    public Page<GroupIndex> simpleGroupSearch(@RequestBody SearchQueryDTO simpleSearchQuery,
                                          Pageable pageable) {
         return searchService.simpleSearch(simpleSearchQuery.keywords(), pageable);
+    }
+
+    @PostMapping("/group/advanced")
+    public Page<GroupIndex> advancedGroupSearch(@RequestBody SearchQueryDTO advancedSearchQuery,
+                                                Pageable pageable) {
+        return searchService.advancedSearch(advancedSearchQuery.keywords(), pageable);
+    }
+
+    @PostMapping("/group/range/{min}:{max}")
+    public Page<GroupIndex> rangeGroupSearch(@PathVariable Integer min, @PathVariable Integer max,
+                                         Pageable pageable) {
+        return searchService.rangeSearch(min, max, pageable);
     }
 
     @PostMapping("/post/simple")
@@ -34,10 +43,15 @@ public class SearchController {
         return postSearchService.simpleSearch(simpleSearchQuery.keywords(), pageable);
     }
 
+    @PostMapping("/post/advanced")
+    public Page<PostIndex> advancedPostSearch(@RequestBody SearchQueryDTO advancedSearchQuery,
+                                              Pageable pageable) {
+        return postSearchService.advancedSearch(advancedSearchQuery.keywords(), pageable);
+    }
 
-    @PostMapping("/advanced")
-    public Page<GroupIndex> advancedSearch(@RequestBody SearchQueryDTO advancedSearchQuery,
-                                           Pageable pageable) {
-        return searchService.advancedSearch(advancedSearchQuery.keywords(), pageable);
+    @PostMapping("/post/range/{min}:{max}")
+    public Page<PostIndex> rangePostSearch(@PathVariable Integer min, @PathVariable Integer max,
+                                        Pageable pageable) {
+        return postSearchService.rangeSearch(min, max, pageable);
     }
 }

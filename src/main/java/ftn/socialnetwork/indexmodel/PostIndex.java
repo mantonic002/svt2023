@@ -12,7 +12,6 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.Setting;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -38,9 +37,14 @@ public class PostIndex {
     @Field(type = FieldType.Date, store = true, name = "creation_date")
     private LocalDate creationDate;
 
+    @Field(type = FieldType.Integer, store = true, name = "like_number")
+    private Integer likeNumber;
+
+
     public PostIndex(Long id, String title, LocalDate creationDate) {
         this.id = id;
         this.title = title;
         this.creationDate = creationDate;
+        this.likeNumber = 0;
     }
 }
