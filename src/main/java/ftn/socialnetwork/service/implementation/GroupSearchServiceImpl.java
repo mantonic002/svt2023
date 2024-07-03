@@ -185,7 +185,7 @@ public class GroupSearchServiceImpl implements GroupSearchService {
                         m -> m.field(field1).fuzziness(Fuzziness.ONE.asString()).query(value1)));
                     b.must(sb -> sb.match(m -> m.field(field2).query(value2)));
                     if (!groupIdsFromFiles.isEmpty()) {
-                        b.should(sb -> sb.terms(t -> t.field("id").terms(tq -> tq.value(groupIdsFromFiles))));
+                        b.must(sb -> sb.terms(t -> t.field("id").terms(tq -> tq.value(groupIdsFromFiles))));
                     }
                     break;
                 case "OR":

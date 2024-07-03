@@ -24,6 +24,7 @@ import org.springframework.data.elasticsearch.core.SearchHitSupport;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -108,18 +109,34 @@ public class PostSearchServiceImpl implements PostSearchService {
 
     @Override
     public Page<PostIndex> advancedSearch(List<String> expression, Pageable pageable) {
-        if (expression.size() != 3) {
+        if (expression.size() != 4) {
             throw new MalformedQueryException("Search query malformed.");
         }
+        String operation = expression.get(3);
+        expression.remove(3);
 
-        String operation = expression.get(1);
-        expression.remove(1);
+        var valueFIle = expression.get(2).split(":")[1];
+        expression.remove(2);
+
+        List<String> fileKeywords = new ArrayList<>();
+        fileKeywords.add(valueFIle);
+        // Search for files related to groups
+        Page<FileIndex> fileResults = fileSearchService.simpleSearch(fileKeywords, pageable, "post");
+
+        // Extract post ids from fileResults
+        List<FieldValue> postIdsFromFiles = fileResults.getContent().stream()
+                .map(FileIndex::getPostId)
+                .distinct()
+                .map(FieldValue::of)
+                .toList();
+
         var searchQueryBuilder =
-            new NativeQueryBuilder().withQuery(buildAdvancedSearchQuery(expression, operation))
-                .withPageable(pageable);
+                new NativeQueryBuilder().withQuery(buildAdvancedSearchQuery(expression, operation, postIdsFromFiles))
+                        .withPageable(pageable);
 
         return runQuery(searchQueryBuilder.build());
     }
+
 
     private Query buildSimpleSearchQuery(List<String> tokens, List<FieldValue> postIdsFromFiles) {
         return BoolQuery.of(q -> q.must(mb -> mb.bool(b -> {
@@ -155,7 +172,7 @@ public class PostSearchServiceImpl implements PostSearchService {
         })))._toQuery();
     }
 
-    private Query buildAdvancedSearchQuery(List<String> operands, String operation) {
+    private Query buildAdvancedSearchQuery(List<String> operands, String operation, List<FieldValue> IdsFromFiles) {
         return BoolQuery.of(q -> q.must(mb -> mb.bool(b -> {
             var field1 = operands.get(0).split(":")[0];
             var value1 = operands.get(0).split(":")[1];
@@ -165,18 +182,19 @@ public class PostSearchServiceImpl implements PostSearchService {
             switch (operation) {
                 case "AND":
                     b.must(sb -> sb.match(
-                        m -> m.field(field1).fuzziness(Fuzziness.ONE.asString()).query(value1)));
+                            m -> m.field(field1).fuzziness(Fuzziness.ONE.asString()).query(value1)));
                     b.must(sb -> sb.match(m -> m.field(field2).query(value2)));
+                    if (!IdsFromFiles.isEmpty()) {
+                        b.must(sb -> sb.terms(t -> t.field("id").terms(tq -> tq.value(IdsFromFiles))));
+                    }
                     break;
                 case "OR":
                     b.should(sb -> sb.match(
-                        m -> m.field(field1).fuzziness(Fuzziness.ONE.asString()).query(value1)));
+                            m -> m.field(field1).fuzziness(Fuzziness.ONE.asString()).query(value1)));
                     b.should(sb -> sb.match(m -> m.field(field2).query(value2)));
-                    break;
-                case "NOT":
-                    b.must(sb -> sb.match(
-                        m -> m.field(field1).fuzziness(Fuzziness.ONE.asString()).query(value1)));
-                    b.mustNot(sb -> sb.match(m -> m.field(field2).query(value2)));
+                    if (!IdsFromFiles.isEmpty()) {
+                        b.should(sb -> sb.terms(t -> t.field("id").terms(tq -> tq.value(IdsFromFiles))));
+                    }
                     break;
             }
 
