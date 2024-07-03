@@ -24,6 +24,7 @@ import org.springframework.data.elasticsearch.core.SearchHitSupport;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -109,14 +110,29 @@ public class GroupSearchServiceImpl implements GroupSearchService {
 
     @Override
     public Page<GroupIndex> advancedSearch(List<String> expression, Pageable pageable) {
-        if (expression.size() != 3) {
+        if (expression.size() != 4) {
             throw new MalformedQueryException("Search query malformed.");
         }
+        String operation = expression.get(3);
+        expression.remove(3);
 
-        String operation = expression.get(1);
-        expression.remove(1);
+        var valueFIle = expression.get(2).split(":")[1];
+        expression.remove(2);
+
+        List<String> fileKeywords = new ArrayList<>();
+        fileKeywords.add(valueFIle);
+        // Search for files related to groups
+        Page<FileIndex> fileResults = fileSearchService.simpleSearch(fileKeywords, pageable, "group");
+
+        // Extract group ids from fileResults
+        List<FieldValue> groupIdsFromFiles = fileResults.getContent().stream()
+                .map(FileIndex::getGroupId)
+                .distinct()
+                .map(FieldValue::of)
+                .toList();
+
         var searchQueryBuilder =
-            new NativeQueryBuilder().withQuery(buildAdvancedSearchQuery(expression, operation))
+            new NativeQueryBuilder().withQuery(buildAdvancedSearchQuery(expression, operation, groupIdsFromFiles))
                 .withPageable(pageable);
 
         return runQuery(searchQueryBuilder.build());
@@ -156,7 +172,7 @@ public class GroupSearchServiceImpl implements GroupSearchService {
         })))._toQuery();
     }
 
-    private Query buildAdvancedSearchQuery(List<String> operands, String operation) {
+    private Query buildAdvancedSearchQuery(List<String> operands, String operation, List<FieldValue> groupIdsFromFiles) {
         return BoolQuery.of(q -> q.must(mb -> mb.bool(b -> {
             var field1 = operands.get(0).split(":")[0];
             var value1 = operands.get(0).split(":")[1];
@@ -168,16 +184,17 @@ public class GroupSearchServiceImpl implements GroupSearchService {
                     b.must(sb -> sb.match(
                         m -> m.field(field1).fuzziness(Fuzziness.ONE.asString()).query(value1)));
                     b.must(sb -> sb.match(m -> m.field(field2).query(value2)));
+                    if (!groupIdsFromFiles.isEmpty()) {
+                        b.should(sb -> sb.terms(t -> t.field("id").terms(tq -> tq.value(groupIdsFromFiles))));
+                    }
                     break;
                 case "OR":
                     b.should(sb -> sb.match(
                         m -> m.field(field1).fuzziness(Fuzziness.ONE.asString()).query(value1)));
                     b.should(sb -> sb.match(m -> m.field(field2).query(value2)));
-                    break;
-                case "NOT":
-                    b.must(sb -> sb.match(
-                        m -> m.field(field1).fuzziness(Fuzziness.ONE.asString()).query(value1)));
-                    b.mustNot(sb -> sb.match(m -> m.field(field2).query(value2)));
+                    if (!groupIdsFromFiles.isEmpty()) {
+                        b.should(sb -> sb.terms(t -> t.field("id").terms(tq -> tq.value(groupIdsFromFiles))));
+                    }
                     break;
             }
 
